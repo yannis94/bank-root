@@ -15,10 +15,12 @@ func main() {
     fmt.Println()
     
     repo, err := repository.NewPostgres()
+    err = repo.Init()
 
     if err != nil {
         log.Fatal(err)
     }
+
 
     server := api.NewApiServer(":3001", repo)
     server.Start()
