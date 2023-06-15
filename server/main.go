@@ -2,17 +2,24 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/yannis94/bank-root/internal/api"
+	"github.com/yannis94/bank-root/internal/repository"
 )
 
 func main() {
     fmt.Println("-----------------------------------")
     fmt.Println("------------ Bank Root ------------")
     fmt.Println("-------------- Server -------------")
-    fmt.Println("-----------------------------------")
     fmt.Println()
+    
+    repo, err := repository.NewPostgres()
 
-    server := api.NewApiServer(":3001")
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    server := api.NewApiServer(":3001", repo)
     server.Start()
 }

@@ -10,6 +10,8 @@ services:
       - ./server/.env
     depends_on:
       - db
+    networks:
+      - private
 
   db:
     image: postgres:13
@@ -19,6 +21,12 @@ services:
       - private-storage:/var/lib/postgresql/data
     env_file:
       - ./database/.env
+    networks:
+      - private
 
 volumes:
   private-storage:
+
+networks:
+  private:
+    driver: bridge

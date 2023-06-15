@@ -19,12 +19,13 @@ type ApiError struct {
 
 type ApiServer struct {
     port string
-    repo repository.Repository
+    repo repository.Storage
 }
 
-func NewApiServer(port string) *ApiServer {
+func NewApiServer(port string, repo repository.Storage) *ApiServer {
     return &ApiServer{
         port: port,
+        repo: repo,
     }
 }
 

@@ -2,7 +2,7 @@ package repository
 
 import "github.com/yannis94/bank-root/internal/service"
 
-type Repository interface {
+type Storage interface {
     CreateAccount(account *service.Account) error
     DeleteAccount(id int) error
     UpdateAccount(account *service.Account) error
