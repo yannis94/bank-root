@@ -5,13 +5,13 @@ import "time"
 type Transfer struct {
     Id int `json:"id"`
     DemandId int `json:"demand_id"`
-    Done bool `json:"done"`
+    Validated bool `json:"done"`
     CreateAt time.Time `json:"created_at"`
 }
 
 type TransferRequest struct {
     DemandId int `json:"demand_id"`
-    Done bool `json:"done"`
+    Validated bool `json:"validated"`
 }
 
 type TransferDemandRequest struct {
@@ -47,10 +47,10 @@ func NewTransferDemand(amount int, from, to, message string) *TransferDemand {
     }
 }
 
-func NewTransfer(demand_id int, done bool) *Transfer {
+func NewTransfer(demand_id int, validated bool) *Transfer {
     return &Transfer{
         DemandId: demand_id,
-        Done: done,
+        Validated: validated,
         CreateAt: time.Now().UTC(),
     }
 }

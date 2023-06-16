@@ -162,7 +162,7 @@ func (pg *Postgres) CreateTransferDemand(demand *service.TransferDemand) error {
     INSERT INTO transfer_demand (closed, from_account, to_account, message, amount, accepted, created_at)
     VALUES ($1, $2, $3, $4, $5, $6, $7);
     `
-    _, err := pg.db.Query(query, demand.Closed, demand.FromAccount, demand.ToAccount, demand.Message, demand.Accepted, demand.CreateAt)
+    _, err := pg.db.Query(query, demand.Closed, demand.FromAccount, demand.ToAccount, demand.Message, demand.Amount, demand.Accepted, demand.CreateAt)
 
     return err
 }
@@ -186,7 +186,7 @@ func (pg *Postgres) GetTransferDemandById(id int) (*service.TransferDemand, erro
 }
 
 func (pg *Postgres) GetAcceptedTransferDemands() ([]*service.TransferDemand, error) {
-    query := "SELECT * FROM transfer_demand WHERE closed = $1 AND accepted = $1;"
+    query := "SELECT * FROM transfer_demand WHERE closed = $1 AND accepted = $2;"
 
     rows, err := pg.db.Query(query, false, true)
 
@@ -207,17 +207,24 @@ func (pg *Postgres) GetAcceptedTransferDemands() ([]*service.TransferDemand, err
 }
 
 func (pg *Postgres) UpdateTransferDemand(demand *service.TransferDemand) error {
-    query := "UPDATE transfer_demand SET closed = $1, accepted = $2;"
+    query := "UPDATE transfer_demand SET closed = $1, accepted = $2 WHERE id=$3;"
 
-    _, err := pg.db.Query(query, demand.Closed, demand.Accepted)
+    _, err := pg.db.Query(query, demand.Closed, demand.Accepted, demand.Id)
 
     return err
 }
 
 func (pg *Postgres) CreateTransfer(transfer *service.Transfer) error {
-    query := "INSERT INTO transfer (demand_id, done, created_at) VALUES ($1, $2, $3);"
+    query := "INSERT INTO transfer (demand_id, validated, created_at) VALUES ($1, $2, $3);"
 
-    _, err := pg.db.Query(query, transfer.DemandId, transfer.Done, transfer.CreateAt)
+    _, err := pg.db.Query(query, transfer.DemandId, transfer.Validated, transfer.CreateAt)
+
+    if err != nil {
+        return err
+    }
+
+    updateQuery := "UPDATE transfer_demand SET closed = true WHERE id = $1;"
+    _, err = pg.db.Query(updateQuery, transfer.DemandId)
 
     return err
 }

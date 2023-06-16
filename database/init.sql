@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS transfer_demand (
     created_at TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS tansfer (
+CREATE TABLE IF NOT EXISTS transfer (
     id SERIAL PRIMARY KEY,
     demand_id INTEGER REFERENCES transfer_demand(id),
     done BOOLEAN,

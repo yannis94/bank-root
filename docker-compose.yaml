@@ -12,6 +12,7 @@ services:
       - db
     networks:
       - private
+    restart: always
 
   db:
     image: postgres:13
