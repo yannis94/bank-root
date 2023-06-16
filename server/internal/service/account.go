@@ -7,27 +7,25 @@ import (
 )
 
 type CreateAccountRequest struct {
-    FirstName string `json:"first_name"`
-    LastName string `json:"last_name"`
+    ClientId int `json:"client_id"`
+    Deposit int `json:"deposit"`
 }
 
 type Account struct {
     Id int `json:"id"`
-    FirstName string `json:"first_name"`
-    LastName string `json:"last_name"`
+    ClientId int `json:"client_id"`
     Number string `json:"number"`
     Balance int64 `json:"balance"`
     CreatedAt time.Time `json:"created_at"`
 }
 
-func NewAccount(firstname, lastname string) *Account {
+func NewAccount(client_id int, deposit int) *Account {
     accountNumber := uuid.New()
 
     return &Account{
-        FirstName: firstname,
-        LastName: lastname,
+        ClientId: client_id,
         Number: accountNumber.String(),
-        Balance: 0,
+        Balance: int64(deposit),
         CreatedAt: time.Now().UTC(),
     }
 }

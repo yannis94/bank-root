@@ -15,7 +15,6 @@ func main() {
     fmt.Println()
     
     repo, err := repository.NewPostgres()
-    err = repo.Init()
 
     if err != nil {
         log.Fatal(err)

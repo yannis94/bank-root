@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/yannis94/bank-root/internal/config"
@@ -30,32 +31,65 @@ func NewPostgres() (*Postgres, error) {
     return &Postgres{ db: db }, nil
 }
 
-func (pg *Postgres) Init() error {
-    return pg.createAccoutTable()
+func (pg *Postgres) CreateClient(client *service.Client) (*service.Client, error) {
+    query := `INSERT INTO client (first_name, last_name, email, password, created_at)
+    VALUES ($1, $2, $3, $4, $5) RETURNING id;`
+
+    rows, err := pg.db.Query(query, client.FirstName, client.LastName, client.Email, client.Password, client.CreatedAt)
+
+    if err != nil {
+        return nil, err
+    }
+
+    for rows.Next() {
+        rows.Scan(&client.Id)
+    }
+
+    return client, nil
 }
 
-func (pg *Postgres) createAccoutTable() error {
-    query := `CREATE TABLE IF NOT EXISTS account (
-        id SERIAL PRIMARY KEY,
-        first_name VARCHAR(50),
-        last_name VARCHAR(120),
-        number UUID,
-        balance INTEGER, 
-        created_at TIMESTAMP
-    );
-    `
-    _, err := pg.db.Exec(query)
+func (pg *Postgres) GetClientById(id int) (*service.Client, error) {
+    client := &service.Client{}
+    query := "SELECT * FROM client WHERE id = $1;"
 
-    return err
+    rows, err := pg.db.Query(query, id)
+
+    if err != nil {
+        return nil, err
+    }
+
+    for rows.Next() {
+        rows.Scan(&client.Id, &client.FirstName, &client.LastName, &client.Email, &client.Password, &client.CreatedAt)
+    }
+
+    return client, nil
+}
+
+func (pg *Postgres) DeleteClient(id int) (*service.Client, error) {
+    query := "DELETE FROM client WHERE id = $1;"
+
+    rows, err := pg.db.Query(query, id)
+
+    client := &service.Client{}
+
+    if err != nil {
+        return nil, err
+    }
+
+    for rows.Next() {
+        rows.Scan(&client.Id, &client.FirstName, &client.LastName, &client.Email, &client.Password, &client.CreatedAt)
+    }
+
+    return client, nil
 }
 
 func (pg *Postgres) CreateAccount(account *service.Account) (*service.Account, error) {
     query := `
-        INSERT INTO account (first_name, last_name, number, balance, created_at) 
-        VALUES ($1, $2, $3, $4, $5) RETURNING id;
+        INSERT INTO account (client_id, number, balance, created_at) 
+        VALUES ($1, $2, $3, $4) RETURNING id;
     `
 
-    rows, err := pg.db.Query(query, account.FirstName, account.LastName, account.Number, account.Balance, account.CreatedAt)
+    rows, err := pg.db.Query(query, account.ClientId, account.Number, account.Balance, account.CreatedAt)
 
     if err != nil {
         return nil, err
@@ -68,15 +102,12 @@ func (pg *Postgres) CreateAccount(account *service.Account) (*service.Account, e
     return account, nil
 }
 
-func (pg *Postgres) DeleteAccount(id int) error {
-    query := "DELETE FROM account WHERE id = $1;"
-    _, err := pg.db.Query(query, id)
+func (pg *Postgres) UpdateAccountAmount(uuid string, amount int) error {
+    query := "UPDATE account SET amount = $2 WHERE number = $1;"
+
+    _, err := pg.db.Query(query, uuid, amount)
 
     return err
-}
-
-func (pg *Postgres) UpdateAccount(account *service.Account) error {
-    return nil
 }
 
 func (pg *Postgres) GetAccountById(id int) (*service.Account, error) {
@@ -100,11 +131,101 @@ func (pg *Postgres) GetAccountById(id int) (*service.Account, error) {
     return account, nil
 }
 
+func (pg *Postgres) GetAccountNumber(client_id int) (string, error) {
+    query := "SELECT number FROM account WHERE client_id = $1;"
+
+    rows, err := pg.db.Query(query, client_id)
+
+    if err != nil {
+        return "", err
+    }
+
+    var account_number string
+
+    for rows.Next() {
+        rows.Scan(&account_number)
+    }
+
+    return account_number, nil
+}
+
+func (pg *Postgres) CreateClosedAccount(account_num string) error {
+    query := "INSERT INTO closed_account (number, created_at) VALUES ($1, $2);"
+    
+    _, err := pg.db.Query(query, account_num, time.Now().UTC())
+
+    return err
+}
+
+func (pg *Postgres) CreateTransferDemand(demand *service.TransferDemand) error {
+    query := `
+    INSERT INTO transfer_demand (closed, from_account, to_account, message, amount, accepted, created_at)
+    VALUES ($1, $2, $3, $4, $5, $6, $7);
+    `
+    _, err := pg.db.Query(query, demand.Closed, demand.FromAccount, demand.ToAccount, demand.Message, demand.Accepted, demand.CreateAt)
+
+    return err
+}
+
+func (pg *Postgres) GetTransferDemandById(id int) (*service.TransferDemand, error) {
+    query := "SELECT * FROM transfer_demand WHERE id = $1;"
+
+    rows, err := pg.db.Query(query, id)
+
+    if err != nil {
+        return nil, err
+    }
+
+    transferDemand := &service.TransferDemand{}
+
+    for rows.Next() {
+        rows.Scan(&transferDemand.Id, &transferDemand.Closed, &transferDemand.FromAccount, &transferDemand.ToAccount, &transferDemand.Message, &transferDemand.Amount, &transferDemand.Accepted, &transferDemand.CreateAt)
+    }
+
+    return transferDemand, nil
+}
+
+func (pg *Postgres) GetAcceptedTransferDemands() ([]*service.TransferDemand, error) {
+    query := "SELECT * FROM transfer_demand WHERE closed = $1 AND accepted = $1;"
+
+    rows, err := pg.db.Query(query, false, true)
+
+    if err != nil {
+        return nil, err
+    }
+
+    var transferDemands []*service.TransferDemand
+
+    for rows.Next() {
+        demand := &service.TransferDemand{}
+        rows.Scan(&demand.Id, &demand.Closed, &demand.FromAccount, &demand.ToAccount, &demand.Message, &demand.Amount, &demand.Accepted, &demand.CreateAt)
+
+        transferDemands = append(transferDemands, demand)
+    }
+
+    return transferDemands, nil
+}
+
+func (pg *Postgres) UpdateTransferDemand(demand *service.TransferDemand) error {
+    query := "UPDATE transfer_demand SET closed = $1, accepted = $2;"
+
+    _, err := pg.db.Query(query, demand.Closed, demand.Accepted)
+
+    return err
+}
+
+func (pg *Postgres) CreateTransfer(transfer *service.Transfer) error {
+    query := "INSERT INTO transfer (demand_id, done, created_at) VALUES ($1, $2, $3);"
+
+    _, err := pg.db.Query(query, transfer.DemandId, transfer.Done, transfer.CreateAt)
+
+    return err
+}
 
 func accountRowsScanner(rows *sql.Rows) (*service.Account, error) {
     account := &service.Account{}
 
-    err := rows.Scan(&account.Id, &account.FirstName, &account.LastName, &account.Number, &account.Balance, &account.CreatedAt)
+    err := rows.Scan(&account.Id, &account.ClientId, &account.Number, &account.Balance, &account.CreatedAt)
     
     if err != nil {
         return nil, err

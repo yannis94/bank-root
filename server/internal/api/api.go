@@ -30,10 +30,15 @@ func NewApiServer(port string, repo repository.Storage) *ApiServer {
 func (server *ApiServer) Start() {
     router := mux.NewRouter()
 
+    router.HandleFunc("/client", httpHandleFuncTransform(server.handleCreateClient)).Methods("POST")
+    router.HandleFunc("/client", httpHandleFuncTransform(server.handleDeleteClient)).Methods("DELETE")
+    router.HandleFunc("/client/{id}", httpHandleFuncTransform(server.handleGetClientById)).Methods("GET")
     router.HandleFunc("/account", httpHandleFuncTransform(server.handleCreateAccount)).Methods("POST")
     router.HandleFunc("/account/{id}", httpHandleFuncTransform(server.handleGetAccount)).Methods("GET")
-    router.HandleFunc("/account/{id}", httpHandleFuncTransform(server.handleDeleteAccount)).Methods("DELETE")
-    router.HandleFunc("/transfer", httpHandleFuncTransform(server.handleTransfer)).Methods("POST")
+    router.HandleFunc("/demand", httpHandleFuncTransform(server.handleTransferDemand)).Methods("POST")
+    router.HandleFunc("/demand", httpHandleFuncTransform(server.handleGetAcceptedTransferDemands)).Methods("GET")
+    router.HandleFunc("/demand", httpHandleFuncTransform(server.handleUpdateTransferDemand)).Methods("PUT")
+    router.HandleFunc("/transfer", httpHandleFuncTransform(server.handlerCreateTransfer)).Methods("POST")
 
     log.Println("Server listening on port", server.port)
 

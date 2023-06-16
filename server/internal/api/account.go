@@ -11,10 +11,6 @@ import (
 )
 
 func (server *ApiServer) handleGetAccount(w http.ResponseWriter, r *http.Request) error {
-    if r.Method == "DELETE" {
-        return server.handleDeleteAccount(w, r)
-    }
-
     vars := mux.Vars(r)
 
     id, err := strconv.Atoi(vars["id"])
@@ -36,7 +32,6 @@ func (server *ApiServer) handleGetAccount(w http.ResponseWriter, r *http.Request
     } 
 
     return writeJSON(w, http.StatusAccepted, account)
-
 }
 
 func (server *ApiServer) handleCreateAccount(w http.ResponseWriter, r *http.Request) error {
@@ -47,31 +42,13 @@ func (server *ApiServer) handleCreateAccount(w http.ResponseWriter, r *http.Requ
     }
     defer r.Body.Close()
 
-    account := service.NewAccount(createAccountReq.FirstName, createAccountReq.LastName)
+    account := service.NewAccount(createAccountReq.ClientId, createAccountReq.Deposit)
     
     accountCreated, err := server.repo.CreateAccount(account)
 
     if err != nil {
-        return writeJSON(w, http.StatusInternalServerError, ApiError{ Details: err.Error() })
+        return writeJSON(w, http.StatusInternalServerError, ApiError{ Details: "Database error." })
     }
 
     return writeJSON(w, http.StatusCreated, accountCreated)
-}
-
-func (server *ApiServer) handleDeleteAccount(w http.ResponseWriter, r *http.Request) error {
-    vars := mux.Vars(r)
-    id, err := strconv.Atoi(vars["id"])
-
-    if err != nil {
-        errMessage := fmt.Sprintf("%s is not a vaild id.", vars["id"])
-        return writeJSON(w, http.StatusBadRequest, ApiError{ Details: errMessage })
-    }
-
-    err = server.repo.DeleteAccount(id)
-
-    if err != nil {
-        return writeJSON(w, http.StatusInternalServerError, ApiError{ Details: "Database error."})
-    }
-    
-    return writeJSON(w, http.StatusOK, map[string]string{"message": fmt.Sprintf("Account id %d get deleted.", id)})
 }
