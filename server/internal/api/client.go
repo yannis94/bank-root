@@ -36,7 +36,7 @@ func (server *ApiServer) handleGetClientById(w http.ResponseWriter, r *http.Requ
     id, err := strconv.Atoi(vars["id"])
 
     if err != nil {
-        errMessage := fmt.Sprintf("%d is not a valid id.", vars["id"])
+        errMessage := fmt.Sprintf("%s is not a valid id.", vars["id"])
         return writeJSON(w, http.StatusBadRequest, ApiError{ Details: errMessage })
     }
 
@@ -58,6 +58,22 @@ func (server *ApiServer) handleDeleteClient(w http.ResponseWriter, r *http.Reque
 
     if err := json.NewDecoder(r.Body).Decode(&deleteClientReq); err != nil {
         return writeJSON(w, http.StatusBadRequest, ApiError{ Details: "JSON invalid format." })
+    }
+
+    account_number, err := server.repo.GetAccountNumber(deleteClientReq.Id)
+
+    if err != nil {
+        return writeJSON(w, http.StatusInternalServerError, ApiError{ Details: "Database error." })
+    }
+
+    if account_number == "" {
+        return writeJSON(w, http.StatusNotFound, ApiError{ Details: "Client not found." })
+    }
+
+    err = server.repo.CreateClosedAccount(account_number)
+
+    if err != nil {
+        return writeJSON(w, http.StatusInternalServerError, ApiError{ Details: "Database error." })
     }
 
     client, err := server.repo.DeleteClient(deleteClientReq.Id)
