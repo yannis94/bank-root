@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/yannis94/bank-root/internal/auth"
 	"github.com/yannis94/bank-root/internal/repository"
 )
 
@@ -18,21 +19,25 @@ type ApiError struct {
 type ApiServer struct {
     port string
     repo repository.Storage
+    auth *auth.AuthService
 }
 
-func NewApiServer(port string, repo repository.Storage) *ApiServer {
+func NewApiServer(port string, repo repository.Storage, auth *auth.AuthService) *ApiServer {
     return &ApiServer{
         port: port,
         repo: repo,
+        auth: auth,
     }
 }
 
 func (server *ApiServer) Start() {
     router := mux.NewRouter()
 
+    router.HandleFunc("/tkn", httpHandleFuncTransform(server.getClientToken)).Methods("GET")
+
     router.HandleFunc("/client", httpHandleFuncTransform(server.handleCreateClient)).Methods("POST")
     router.HandleFunc("/client", httpHandleFuncTransform(server.handleDeleteClient)).Methods("DELETE")
-    router.HandleFunc("/client/{id}", httpHandleFuncTransform(server.handleGetClientById)).Methods("GET")
+    router.HandleFunc("/client/{id}", jwtClientAuth(httpHandleFuncTransform(server.handleGetClientById))).Methods("GET")
     router.HandleFunc("/account", httpHandleFuncTransform(server.handleCreateAccount)).Methods("POST")
     router.HandleFunc("/account/{id}", httpHandleFuncTransform(server.handleGetAccount)).Methods("GET")
     router.HandleFunc("/demand", httpHandleFuncTransform(server.handleTransferDemand)).Methods("POST")
@@ -62,3 +67,9 @@ func httpHandleFuncTransform(f apiFunc) http.HandlerFunc {
     }
 }
 
+func jwtClientAuth(f http.HandlerFunc) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        log.Println("JWT client authentication")
+        f(w, r)
+    }
+}

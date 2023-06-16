@@ -7,7 +7,6 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
-	"github.com/yannis94/bank-root/internal/config"
 	"github.com/yannis94/bank-root/internal/service"
 )
 
@@ -15,8 +14,8 @@ type Postgres struct {
     db *sql.DB
 }
 
-func NewPostgres() (*Postgres, error) {
-    connStr := fmt.Sprintf("postgres://%s:%s@db:%s/%s?sslmode=disable", config.DB_USER, config.DB_PASS, config.DB_PORT, config.DB_NAME)
+func NewPostgres(user, pwd, port, db_name string) (*Postgres, error) {
+    connStr := fmt.Sprintf("postgres://%s:%s@db:%s/%s?sslmode=disable", user, pwd, port, db_name)
 
     db, err := sql.Open("postgres", connStr)
 

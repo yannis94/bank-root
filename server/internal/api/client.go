@@ -3,12 +3,25 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/yannis94/bank-root/internal/service"
 )
+
+//prov
+func (server *ApiServer) getClientToken(w http.ResponseWriter, r *http.Request) error {
+    tkn, err := server.auth.CreateJWT("client")
+
+    if err != nil {
+        log.Println(err)
+        return writeJSON(w, http.StatusInternalServerError, ApiError{ Details: "Token creation failed." })
+    }
+
+    return writeJSON(w, http.StatusOK, map[string]string{"token": tkn})
+}
 
 func (server *ApiServer) handleCreateClient(w http.ResponseWriter, r *http.Request) error {
     createClientReq := &service.CreateClientRequest{}
