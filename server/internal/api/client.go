@@ -8,22 +8,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/yannis94/bank-root/internal/helper"
 	"github.com/yannis94/bank-root/internal/service"
 )
 
-//prov
-func (server *ApiServer) getClientToken(w http.ResponseWriter, r *http.Request) error {
-    tkn, err := server.auth.CreateJWT("client")
-
-    if err != nil {
-        log.Println(err)
-        return writeJSON(w, http.StatusInternalServerError, ApiError{ Details: "Token creation failed." })
-    }
-
-    return writeJSON(w, http.StatusOK, map[string]string{"token": tkn})
-}
 
 func (server *ApiServer) handleCreateClient(w http.ResponseWriter, r *http.Request) error {
     createClientReq := &service.CreateClientRequest{}
@@ -85,8 +75,19 @@ func (server *ApiServer) handleClientSignIn(w http.ResponseWriter, r *http.Reque
     if !helper.ConfirmPassword(clientSiginReq.Password, client.Password) {
         return writeJSON(w, http.StatusForbidden, ApiError{ Details: "Incorrect password." })
     }
+    
+    jti := uuid.New().String()
 
-    tkn, err := server.auth.CreateJWT("client")
+    token, err := server.auth.CreateJWT("client", jti)
+    refresh_token, err := server.auth.CreateRefreshToken("client")
+
+    if err != nil {
+        return writeJSON(w, http.StatusInternalServerError, ApiError{ Details: "Unable to generate an access token." })
+    }
+
+    session := service.NewSession(jti, refresh_token)
+
+    err = server.repo.CreateSession(session)
 
     if err != nil {
         return writeJSON(w, http.StatusInternalServerError, ApiError{ Details: "Unable to generate an access token." })
@@ -94,7 +95,7 @@ func (server *ApiServer) handleClientSignIn(w http.ResponseWriter, r *http.Reque
 
     cookie := &http.Cookie{
         Name: "access_token",
-        Value: tkn,
+        Value: token,
         Path: "/",
         Expires: time.Now().Add(24 * time.Hour),
         HttpOnly: true,

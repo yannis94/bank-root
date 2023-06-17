@@ -246,6 +246,40 @@ func (pg *Postgres) CreateTransfer(transfer *service.Transfer) error {
     return err
 }
 
+func (pg *Postgres) CreateSession(session *service.Session) error {
+    query := "INSERT INTO session (token_id, refresh_token, expires_at) VALUES ($1, $2, $3);"
+
+    _, err := pg.db.Query(query, session.TokenId, session.Refresh_token, session.ExpiresAt)
+
+    return err
+}
+
+func (pg *Postgres) GetSessionFromTokenId(id string) (*service.Session, error) {
+    query := "SELECT * FROM session WHERE token_id = $1;"
+
+    rows, err := pg.db.Query(query, id)
+
+    if err != nil {
+        return nil, err
+    }
+
+    session := &service.Session{}
+
+    for rows.Next() {
+        rows.Scan(&session.TokenId, &session.Refresh_token, &session.ExpiresAt)
+    }
+
+    return session, nil
+}
+
+func (pg *Postgres) DeleteSessionFromTokenId(id string) error {
+    query := "DELETE FROM session WHERE token_id = $1;"
+
+    _, err := pg.db.Query(query, id)
+
+    return err
+}
+
 func accountRowsScanner(rows *sql.Rows) (*service.Account, error) {
     account := &service.Account{}
 

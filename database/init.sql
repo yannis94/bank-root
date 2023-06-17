@@ -47,3 +47,9 @@ CREATE TABLE IF NOT EXISTS closed_account (
     number UUID,
     created_at TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS session (
+    token_id VARCHAR(120),
+    refresh_token VARCHAR(400),
+    expires_at INTEGER
+);
