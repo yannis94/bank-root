@@ -33,17 +33,18 @@ func NewApiServer(port string, repo repository.Storage, auth *auth.AuthService) 
 func (server *ApiServer) Start() {
     router := mux.NewRouter()
 
-    router.HandleFunc("/tkn", httpHandleFuncTransform(server.getClientToken)).Methods("GET")
+    router.HandleFunc("/tkn", customHandler(server.getClientToken)).Methods("GET")
 
-    router.HandleFunc("/client", httpHandleFuncTransform(server.handleCreateClient)).Methods("POST")
-    router.HandleFunc("/client", httpHandleFuncTransform(server.handleDeleteClient)).Methods("DELETE")
-    router.HandleFunc("/client/{id}", jwtClientAuth(httpHandleFuncTransform(server.handleGetClientById))).Methods("GET")
-    router.HandleFunc("/account", httpHandleFuncTransform(server.handleCreateAccount)).Methods("POST")
-    router.HandleFunc("/account/{id}", httpHandleFuncTransform(server.handleGetAccount)).Methods("GET")
-    router.HandleFunc("/demand", httpHandleFuncTransform(server.handleTransferDemand)).Methods("POST")
-    router.HandleFunc("/demand", httpHandleFuncTransform(server.handleGetAcceptedTransferDemands)).Methods("GET")
-    router.HandleFunc("/demand", httpHandleFuncTransform(server.handleUpdateTransferDemand)).Methods("PUT")
-    router.HandleFunc("/transfer", httpHandleFuncTransform(server.handlerCreateTransfer)).Methods("POST")
+    router.HandleFunc("/client/signup", customHandler(server.handleCreateClient)).Methods("POST")
+    router.HandleFunc("/client/signin", customHandler(server.handleClientSignIn)).Methods("POST")
+    router.HandleFunc("/client", customHandler(server.handleDeleteClient)).Methods("DELETE")
+    router.HandleFunc("/client/{id}", jwtClientAuth(server.auth, customHandler(server.handleGetClientById))).Methods("GET")
+    router.HandleFunc("/account", jwtClientAuth(server.auth, customHandler(server.handleCreateAccount))).Methods("POST")
+    router.HandleFunc("/account/{id}", customHandler(server.handleGetAccount)).Methods("GET")
+    router.HandleFunc("/demand", customHandler(server.handleTransferDemand)).Methods("POST")
+    router.HandleFunc("/demand", customHandler(server.handleGetAcceptedTransferDemands)).Methods("GET")
+    router.HandleFunc("/demand", customHandler(server.handleUpdateTransferDemand)).Methods("PUT")
+    router.HandleFunc("/transfer", customHandler(server.handlerCreateTransfer)).Methods("POST")
 
     log.Println("Server listening on port", server.port)
 
@@ -59,7 +60,7 @@ func writeJSON(w http.ResponseWriter, status int, content any) error {
     return json.NewEncoder(w).Encode(content)
 }
 
-func httpHandleFuncTransform(f apiFunc) http.HandlerFunc {
+func customHandler(f apiFunc) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         if err := f(w, r); err != nil {
             writeJSON(w, http.StatusBadRequest, ApiError{ Details: err.Error() })
@@ -67,9 +68,18 @@ func httpHandleFuncTransform(f apiFunc) http.HandlerFunc {
     }
 }
 
-func jwtClientAuth(f http.HandlerFunc) http.HandlerFunc {
+func jwtClientAuth(auth *auth.AuthService, f http.HandlerFunc) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
-        log.Println("JWT client authentication")
-        f(w, r)
+        cookie, err := r.Cookie("access_token")
+        token := cookie.Value
+
+        if err != nil {
+            writeJSON(w, http.StatusForbidden, ApiError{ Details: "No access token found." })
+        } else if valid, err := auth.IsTokenValid(token, "client"); err != nil || !valid {
+            writeJSON(w, http.StatusForbidden, ApiError{ Details: "Access token invalid." })
+        } else {
+            log.Println("JWT client authentication")
+            f(w, r)
+        }
     }
 }

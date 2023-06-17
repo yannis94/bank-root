@@ -64,6 +64,24 @@ func (pg *Postgres) GetClientById(id int) (*service.Client, error) {
     return client, nil
 }
 
+func (pg *Postgres) GetClientByEmail(email string) (*service.Client, error) {
+    query := "SELECT * FROM client WHERE email = $1;"
+
+    rows, err := pg.db.Query(query, email)
+
+    if err != nil {
+        return nil, err
+    }
+
+    client := &service.Client{}
+
+    for rows.Next() {
+        rows.Scan(&client.Id, &client.FirstName, &client.LastName, &client.Email, &client.Password, &client.CreatedAt)
+    }
+
+    return client, err
+}
+
 func (pg *Postgres) DeleteClient(id int) (*service.Client, error) {
     query := "DELETE FROM client WHERE id = $1;"
 

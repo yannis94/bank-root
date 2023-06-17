@@ -22,13 +22,13 @@ func NewAuthService(secret string) *AuthService {
 }
 
 func (auth *AuthService) CreateJWT(role string) (string, error) {
-    exp := time.Now().Add(token_exp * time.Minute).String()
+    exp := time.Now().Add(token_exp * time.Minute)
     jti := uuid.New().String()
     return auth.createToken(exp, role, jti)
 }
 
 func (auth *AuthService) CreateRefreshToken(role string) (string, error) {
-    exp := time.Now().Add(refresh_token_exp * time.Minute).String()
+    exp := time.Now().Add(refresh_token_exp * time.Minute)
     jti := uuid.New().String()
     return auth.createToken(exp, role, jti)
 }
@@ -84,13 +84,14 @@ func (auth *AuthService) RefreshToken(refresh_tkn, tkn_id string) (string, error
     return "", nil
 }
 
-func (auth *AuthService) createToken(exp, role, jti string) (string, error) {
+func (auth *AuthService) createToken(exp time.Time, role, jti string) (string, error) {
     log.Println("Secret", auth.secret)
     newToken := jwt.NewWithClaims(jwt.SigningMethodHS256, 
         jwt.MapClaims{
             "iss": auth.iss,
             "aud": role,
-            "exp": exp,
+            "exp": jwt.NewNumericDate(exp),
+            "iat": jwt.NewNumericDate(time.Now()),
             "jti": jti,
         })
 

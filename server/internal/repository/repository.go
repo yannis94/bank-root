@@ -6,6 +6,7 @@ type Storage interface {
     CreateClient(client *service.Client) (*service.Client, error)
     DeleteClient(id int) (*service.Client, error)
     GetClientById(id int) (*service.Client, error)
+    GetClientByEmail(email string) (*service.Client, error)
     CreateAccount(account *service.Account) (*service.Account, error)
     GetAccountNumber(client_id int) (string, error) 
     UpdateAccountAmount(uuid string, amount int) error

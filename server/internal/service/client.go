@@ -14,7 +14,7 @@ type DeleteClientRequest struct {
     Id int `json:"id"`
 }
 
-type GetClientRequest struct {
+type ClientSignInRequest struct {
     Email string `json:"email"`
     Password string `json:"password"`
 }
