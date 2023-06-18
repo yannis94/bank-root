@@ -20,4 +20,5 @@ type Storage interface {
     CreateSession(session *service.Session) error
     GetSessionFromTokenId(id string) (*service.Session, error)
     DeleteSessionFromTokenId(id string) error
+    GetAccountTransfer(accountId string) ([]*service.TransferDemand, error)
 }

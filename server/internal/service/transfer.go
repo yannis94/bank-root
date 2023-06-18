@@ -26,6 +26,10 @@ type TransferDemandUpdateRequest struct {
     Acceped bool `json:"accepted"`
 }
 
+type ClientGetTransferDemandsRequest struct {
+    AccoutId string
+}
+
 type TransferDemand struct {
     Id int `json:"id"`
     Closed bool `json:"closed"`

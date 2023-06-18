@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"log"
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
@@ -55,7 +54,7 @@ func (auth *AuthService) IsTokenValid(tkn string, role string) (bool, error) {
 }
 
 func (auth *AuthService) RefreshToken(tkn string) (string, error) {
-    token, err := jwt.Parse(tkn, func(token *jwt.Token) (interface{}, error) {
+    token, _ := jwt.Parse(tkn, func(token *jwt.Token) (interface{}, error) {
         if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
             return nil, errors.New("Unexpected signing method.")
         }

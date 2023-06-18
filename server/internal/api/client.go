@@ -159,3 +159,19 @@ func (server *ApiServer) handleDeleteClient(w http.ResponseWriter, r *http.Reque
 
     return writeJSON(w, http.StatusOK, client)
 }
+
+func (server *ApiServer) GetTransferDemands(w http.ResponseWriter, r *http.Request) error {
+    clientTransferDemandReq := &service.ClientGetTransferDemandsRequest{}
+
+    if err := json.NewDecoder(r.Body).Decode(&clientTransferDemandReq); err != nil {
+        return writeJSON(w, http.StatusBadRequest, ApiError{ Details: "Invalid JSON request." })
+    }
+
+    clientTransferDemands, err := server.repo.GetAccountTransfer(clientTransferDemandReq.AccoutId)
+
+    if err != nil {
+        return writeJSON(w, http.StatusInternalServerError, ApiError{ Details: "Database error." })
+    }
+
+    return writeJSON(w, http.StatusAccepted, clientTransferDemands)
+}

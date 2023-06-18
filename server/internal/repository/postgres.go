@@ -246,6 +246,25 @@ func (pg *Postgres) CreateTransfer(transfer *service.Transfer) error {
     return err
 }
 
+func (pg *Postgres) GetAccountTransfer(accountId string) ([]*service.Transfer, error) {
+    var transfers []*service.Transfer
+
+    query := "SELECT * FROM transfer_demand INNER JOIN account ON transfer_demand.from_account = account.number WHERE account.number = $1;"
+
+    rows, err := pg.db.Query(query, accountId)
+
+    if err != nil {
+        return nil, err
+    }
+
+    for rows.Next() {
+        //transfer := &service.Transfer{}
+        //rows.Scan(&transfers.)
+    }
+
+    return transfers, nil
+}
+
 func (pg *Postgres) CreateSession(session *service.Session) error {
     query := "INSERT INTO session (token_id, refresh_token, expires_at) VALUES ($1, $2, $3);"
 
