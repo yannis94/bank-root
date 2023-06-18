@@ -12,6 +12,7 @@ services:
       - db
     networks:
       - private
+      - storage
     restart: always
 
   db:
@@ -24,11 +25,22 @@ services:
     env_file:
       - ./database/.env
     networks:
+      - storage
+
+  moirai:
+    build: ./moirai
+    ports:
+      - "3003:3003"
+    env_file:
+      - ./moirai/.env
+    networks:
       - private
 
 volumes:
   private-storage:
 
 networks:
+  storage:
+    driver: bridge
   private:
     driver: bridge

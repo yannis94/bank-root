@@ -246,10 +246,10 @@ func (pg *Postgres) CreateTransfer(transfer *service.Transfer) error {
     return err
 }
 
-func (pg *Postgres) GetAccountTransfer(accountId string) ([]*service.Transfer, error) {
-    var transfers []*service.Transfer
+func (pg *Postgres) GetAccountTransfer(accountId string) ([]*service.TransferDemand, error) {
+    var demands []*service.TransferDemand
 
-    query := "SELECT * FROM transfer_demand INNER JOIN account ON transfer_demand.from_account = account.number WHERE account.number = $1;"
+    query := "SELECT * FROM transfer_demand WHERE from_account = $1 OR to_account = $1;"
 
     rows, err := pg.db.Query(query, accountId)
 
@@ -258,11 +258,13 @@ func (pg *Postgres) GetAccountTransfer(accountId string) ([]*service.Transfer, e
     }
 
     for rows.Next() {
-        //transfer := &service.Transfer{}
-        //rows.Scan(&transfers.)
+        demand := &service.TransferDemand{}
+        rows.Scan(&demand.Id, &demand.Closed, &demand.FromAccount, &demand.ToAccount, &demand.Message, &demand.Amount, &demand.Accepted, &demand.CreateAt)
+
+        demands = append(demands, demand)
     }
 
-    return transfers, nil
+    return demands, nil
 }
 
 func (pg *Postgres) CreateSession(session *service.Session) error {
