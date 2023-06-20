@@ -1,15 +1,15 @@
-package main
+package core
 
-type transferDemand struct {
+type TransferDemand struct {
     Id int
     Closed  bool
     FromAccount string
     ToAccount string
-    Amount string
+    Amount int
     Accepted bool
 }
 
-type transfer struct {
+type Transfer struct {
     DemandId int
     Done bool
 }

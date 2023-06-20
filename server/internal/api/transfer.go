@@ -40,9 +40,7 @@ func (server *ApiServer) handleUpdateTransferDemand(w http.ResponseWriter, r *ht
 
     transferDemand.Accepted = updateTransferDemandReq.Acceped
 
-    if !transferDemand.Accepted {
-        transferDemand.Closed = true
-    }
+    transferDemand.Closed = true
     
     err = server.repo.UpdateTransferDemand(transferDemand)
 
@@ -61,22 +59,4 @@ func (server *ApiServer) handleGetAcceptedTransferDemands(w http.ResponseWriter,
     }
 
     return writeJSON(w, http.StatusOK, demands)
-}
-
-func (server *ApiServer) handlerCreateTransfer(w http.ResponseWriter, r *http.Request) error {
-    transferReq := &service.TransferRequest{}
-
-    if err := json.NewDecoder(r.Body).Decode(&transferReq); err != nil {
-        return writeJSON(w, http.StatusBadRequest, ApiError{ Details: "Invalid JSON format." })
-    }
-
-    transfer := service.NewTransfer(transferReq.DemandId, transferReq.Validated)
-
-    err := server.repo.CreateTransfer(transfer)
-
-    if err != nil {
-        return writeJSON(w, http.StatusInternalServerError, ApiError{ Details: "Database error, unable to find transfer demand." })
-    }
-
-    return writeJSON(w, http.StatusOK, map[string]string{"message": "Transfer save in database" })
 }

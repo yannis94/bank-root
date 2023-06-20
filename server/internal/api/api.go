@@ -41,10 +41,10 @@ func (server *ApiServer) Start() {
 
     router.HandleFunc("/account", jwtClientAuth(server.auth, customHandler(server.handleCreateAccount))).Methods("POST")
     router.HandleFunc("/account/{id}", customHandler(server.handleGetAccount)).Methods("GET")
-    router.HandleFunc("/transfer/demand", customHandler(server.handleTransferDemand)).Methods("POST")
-    router.HandleFunc("/transfer/demand", customHandler(server.handleGetAcceptedTransferDemands)).Methods("GET")
-    router.HandleFunc("/tranfer/demand", customHandler(server.handleUpdateTransferDemand)).Methods("PUT")
-    router.HandleFunc("/transfer", customHandler(server.handlerCreateTransfer)).Methods("POST")
+    router.HandleFunc("/transfer", customHandler(server.handleTransferDemand)).Methods("POST")
+
+    router.HandleFunc("/transfer", moiraiAuth(customHandler(server.handleGetAcceptedTransferDemands))).Methods("GET")
+    router.HandleFunc("/transfer", moiraiAuth(customHandler(server.handleUpdateTransferDemand))).Methods("PUT")
 
     log.Println("Server listening on port", server.port)
 
@@ -92,5 +92,12 @@ func jwtClientAuth(auth *auth.AuthService, f http.HandlerFunc) http.HandlerFunc 
         } else {
             f(w, r)
         }
+    }
+}
+
+func moiraiAuth(f http.HandlerFunc) http.HandlerFunc {
+    return func (w http.ResponseWriter, r *http.Request) {
+        // check incoming request's host (should be moirai)
+        f(w, r)
     }
 }

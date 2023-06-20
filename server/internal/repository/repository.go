@@ -16,7 +16,6 @@ type Storage interface {
     GetTransferDemandById(id int) (*service.TransferDemand, error)
     GetAcceptedTransferDemands() ([]*service.TransferDemand, error)
     UpdateTransferDemand(demand *service.TransferDemand) error
-    CreateTransfer(transfer *service.Transfer) error
     CreateSession(session *service.Session) error
     GetSessionFromTokenId(id string) (*service.Session, error)
     DeleteSessionFromTokenId(id string) error

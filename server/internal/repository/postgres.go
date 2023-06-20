@@ -176,7 +176,7 @@ func (pg *Postgres) CreateClosedAccount(account_num string) error {
 
 func (pg *Postgres) CreateTransferDemand(demand *service.TransferDemand) error {
     query := `
-    INSERT INTO transfer_demand (closed, from_account, to_account, message, amount, accepted, created_at)
+    INSERT INTO transfer (closed, from_account, to_account, message, amount, accepted, created_at)
     VALUES ($1, $2, $3, $4, $5, $6, $7);
     `
     _, err := pg.db.Query(query, demand.Closed, demand.FromAccount, demand.ToAccount, demand.Message, demand.Amount, demand.Accepted, demand.CreateAt)
@@ -185,7 +185,7 @@ func (pg *Postgres) CreateTransferDemand(demand *service.TransferDemand) error {
 }
 
 func (pg *Postgres) GetTransferDemandById(id int) (*service.TransferDemand, error) {
-    query := "SELECT * FROM transfer_demand WHERE id = $1;"
+    query := "SELECT * FROM transfer WHERE id = $1;"
 
     rows, err := pg.db.Query(query, id)
 
@@ -203,7 +203,7 @@ func (pg *Postgres) GetTransferDemandById(id int) (*service.TransferDemand, erro
 }
 
 func (pg *Postgres) GetAcceptedTransferDemands() ([]*service.TransferDemand, error) {
-    query := "SELECT * FROM transfer_demand WHERE closed = $1 AND accepted = $2;"
+    query := "SELECT * FROM transfer WHERE closed = $1 AND accepted = $2;"
 
     rows, err := pg.db.Query(query, false, true)
 
@@ -224,24 +224,9 @@ func (pg *Postgres) GetAcceptedTransferDemands() ([]*service.TransferDemand, err
 }
 
 func (pg *Postgres) UpdateTransferDemand(demand *service.TransferDemand) error {
-    query := "UPDATE transfer_demand SET closed = $1, accepted = $2 WHERE id=$3;"
+    query := "UPDATE transfer SET closed = $1, accepted = $2 WHERE id=$3;"
 
     _, err := pg.db.Query(query, demand.Closed, demand.Accepted, demand.Id)
-
-    return err
-}
-
-func (pg *Postgres) CreateTransfer(transfer *service.Transfer) error {
-    query := "INSERT INTO transfer (demand_id, validated, created_at) VALUES ($1, $2, $3);"
-
-    _, err := pg.db.Query(query, transfer.DemandId, transfer.Validated, transfer.CreateAt)
-
-    if err != nil {
-        return err
-    }
-
-    updateQuery := "UPDATE transfer_demand SET closed = true WHERE id = $1;"
-    _, err = pg.db.Query(updateQuery, transfer.DemandId)
 
     return err
 }
@@ -249,7 +234,7 @@ func (pg *Postgres) CreateTransfer(transfer *service.Transfer) error {
 func (pg *Postgres) GetAccountTransfer(accountId string) ([]*service.TransferDemand, error) {
     var demands []*service.TransferDemand
 
-    query := "SELECT * FROM transfer_demand WHERE from_account = $1 OR to_account = $1;"
+    query := "SELECT * FROM transfer WHERE from_account = $1 OR to_account = $1;"
 
     rows, err := pg.db.Query(query, accountId)
 

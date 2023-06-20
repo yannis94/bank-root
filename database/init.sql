@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS account (
     created_at TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS transfer_demand (
+CREATE TABLE IF NOT EXISTS transfer (
     id SERIAL PRIMARY KEY,
     closed BOOLEAN,
     from_account UUID,
@@ -32,13 +32,6 @@ CREATE TABLE IF NOT EXISTS transfer_demand (
     message VARCHAR(250),
     amount INTEGER,
     accepted BOOLEAN,
-    created_at TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS transfer (
-    id SERIAL PRIMARY KEY,
-    demand_id INTEGER REFERENCES transfer_demand(id),
-    done BOOLEAN,
     created_at TIMESTAMP
 );
 
