@@ -40,7 +40,7 @@ func (server *ApiServer) Start() {
     router.HandleFunc("/client/transfer-demand", jwtClientAuth(server.auth, customHandler(server.handleGetClientById))).Methods("GET")
 
     router.HandleFunc("/account", jwtClientAuth(server.auth, customHandler(server.handleCreateAccount))).Methods("POST")
-    router.HandleFunc("/account/{id}", customHandler(server.handleGetAccount)).Methods("GET")
+    router.HandleFunc("/account/{account_number}", customHandler(server.handleGetAccountByNumber)).Methods("GET")
     router.HandleFunc("/transfer", customHandler(server.handleTransferDemand)).Methods("POST")
 
     router.HandleFunc("/transfer", moiraiAuth(customHandler(server.handleGetAcceptedTransferDemands))).Methods("GET")

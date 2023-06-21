@@ -148,6 +148,24 @@ func (pg *Postgres) GetAccountById(id int) (*service.Account, error) {
     return account, nil
 }
 
+func (pg *Postgres) GetAccountByNumber(account_number string) (*service.Account, error) {
+    query := "SELECT * FROM account WHERE number = $1;"
+
+    rows, err := pg.db.Query(query, account_number)
+
+    if err != nil {
+        return nil, err
+    }
+
+    account := &service.Account{}
+
+    for rows.Next() {
+        rows.Scan(&account.Id, &account.ClientId, &account.Number, &account.Balance, &account.CreatedAt)
+    }
+
+    return account, nil
+}
+
 func (pg *Postgres) GetAccountNumber(client_id int) (string, error) {
     query := "SELECT number FROM account WHERE client_id = $1;"
 

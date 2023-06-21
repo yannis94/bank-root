@@ -11,6 +11,7 @@ type Storage interface {
     GetAccountNumber(client_id int) (string, error) 
     UpdateAccountAmount(uuid string, amount int) error
     GetAccountById(id int) (*service.Account, error)
+    GetAccountByNumber(account_num string) (*service.Account, error)
     CreateClosedAccount(account_num string) error
     CreateTransferDemand(demand *service.TransferDemand) error
     GetTransferDemandById(id int) (*service.TransferDemand, error)
