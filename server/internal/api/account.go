@@ -34,6 +34,24 @@ func (server *ApiServer) handleGetAccount(w http.ResponseWriter, r *http.Request
     return writeJSON(w, http.StatusAccepted, account)
 }
 
+func (server *ApiServer) handleGetAccountByNumber(w http.ResponseWriter, r *http.Request) error {
+    vars := mux.Vars(r)
+    accountNumber := vars["account_number"]
+
+    account, err := server.repo.GetAccountByNumber(accountNumber)
+
+    if err != nil {
+        return writeJSON(w, http.StatusInternalServerError, ApiError{ Details: "Database error."})
+    } 
+
+    if account == nil {
+        errMessage := fmt.Sprintf("Account number %s not found.", accountNumber)
+        return writeJSON(w, http.StatusNotFound, ApiError{ Details: errMessage})
+    } 
+
+    return writeJSON(w, http.StatusAccepted, account)
+}
+
 func (server *ApiServer) handleCreateAccount(w http.ResponseWriter, r *http.Request) error {
     createAccountReq := &service.CreateAccountRequest{}
 
