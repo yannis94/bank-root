@@ -37,7 +37,7 @@ func (oracle *oracle) isAccountBalanceEnough(amount, balance int) bool {
     return balance - amount >= 0
 }
 
-func (oracle *oracle) transferValidation(transfer core.TransferDemand) error {
+func (oracle *oracle) transferValidation(transfer *core.TransferDemand) error {
     emitterAccountNumber := transfer.FromAccount
     receiverAccountNumber := transfer.ToAccount
 
@@ -49,7 +49,7 @@ func (oracle *oracle) transferValidation(transfer core.TransferDemand) error {
 
     if !oracle.isAccountBalanceEnough(transfer.Amount, int(emitter.Balance)) {
         transfer.Accepted = false
-        return oracle.api.SendTransferValidation(transfer)
+        return oracle.api.SendTransferValidation(*transfer)
     }
 
     receiver, err := oracle.api.GetAccount(receiverAccountNumber)
@@ -59,7 +59,7 @@ func (oracle *oracle) transferValidation(transfer core.TransferDemand) error {
     err = oracle.api.UpdateAccount(*receiver)
 
     if err != nil {
-        oracle.errorQueue.Enqueue(&transfer)
+        oracle.errorQueue.Enqueue(transfer)
         return err
     }
 
@@ -67,10 +67,10 @@ func (oracle *oracle) transferValidation(transfer core.TransferDemand) error {
     err = oracle.api.UpdateAccount(*emitter)
 
     if err != nil {
-        oracle.errorQueue.Enqueue(&transfer)
+        oracle.errorQueue.Enqueue(transfer)
         return err
     }
     
     transfer.Accepted = true
-    return oracle.api.SendTransferValidation(transfer)
+    return oracle.api.SendTransferValidation(*transfer)
 }

@@ -37,7 +37,7 @@ func (server *ApiServer) Start() {
     router.HandleFunc("/client/signin", customHandler(server.handleClientSignIn)).Methods("POST")
     router.HandleFunc("/client", customHandler(server.handleDeleteClient)).Methods("DELETE")
     router.HandleFunc("/client/{id}", jwtClientAuth(server.auth, customHandler(server.handleGetClientById))).Methods("GET")
-    router.HandleFunc("/client/transfer-demand", jwtClientAuth(server.auth, customHandler(server.handleGetClientById))).Methods("GET")
+    router.HandleFunc("/client/transfer-demand", jwtClientAuth(server.auth, customHandler(server.handleTransferDemand))).Methods("GET")
 
     router.HandleFunc("/account", jwtClientAuth(server.auth, customHandler(server.handleCreateAccount))).Methods("POST")
     router.HandleFunc("/account/{account_number}", customHandler(server.handleGetAccountByNumber)).Methods("GET")
